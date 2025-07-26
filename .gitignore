@@ -1,0 +1,224 @@
+# Gradle
+.gradle/
+build/
+**/build/
+gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration file (sdk.dir, etc)
+local.properties
+
+# Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Specific .idea folders
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/gradle.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/misc.xml
+.idea/runConfigurations.xml
+.idea/vcs.xml
+.idea/deploymentTargetDropDown.xml
+
+# External builds
+.cxx/
+.externalNativeBuild/
+
+# NDK
+obj/
+
+# IntelliJ
+out/
+
+# Captures folder (recorded tests/screenshots)
+captures/
+
+# Android Profiling
+*.hprof
+
+# Lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+lint-results.html
+lint-results.xml
+lint-results_files/
+
+# Proguard generated files
+proguard/
+
+# Log files
+*.log
+
+# Android Keystore files
+*.jks
+*.keystore
+release.jks
+debug.keystore
+
+# Android signing files
+google-services.json
+app/google-services.json
+
+# Firebase config
+firebase.json
+.firebaserc
+
+# Fabric plugin (crashes, analytics)
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Unit test reports
+TEST-*.xml
+
+# Online schemas
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# CDT- autotools
+.autotools
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific (PHP Development Tools)
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+
+# Code Recommenders
+.recommenders/
+
+# Annotation Processing
+.apt_generated/
+.apt_generated_test/
+
+# Scala IDE specific (Scala & Java development for Eclipse)
+.cache-main
+.scala_dependencies
+.worksheet
+
+# macOS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows junk
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux junk
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Vim junk
+*.swp
+*.swo
+*~
+.viminfo
+
+# Emacs junk
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# SublimeText junk
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# VS Code
+.vscode/
+
+# Fleet
+.fleet/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+
+# Archive files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Optional: Ignore SDK nếu bạn để trong dự án
+sdk/
+
+# Custom app-specific files
+# Thêm các file cụ thể của dự án AlertDrive tại đây
+*.apk
+*.aab
+mapping.txt
+seeds.txt
+usage.txt
