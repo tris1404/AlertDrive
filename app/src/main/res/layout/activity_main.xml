@@ -4,259 +4,452 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0a0a0a"
+    android:background="@drawable/bg_main"
     tools:context=".MainActivity">
 
-    <!-- Header như dự án GitHub gốc -->
+    <!-- Modern Header with Enhanced Design -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="@drawable/gradient_header"
-        android:padding="20dp"
+        android:background="@drawable/gradient_header_modern"
+        android:padding="24dp"
+        android:elevation="8dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AlertDrive"
-            android:textColor="#ffffff"
-            android:textSize="28sp"
+            android:text="🚗 AlertDrive"
+            android:textColor="@color/text_on_primary"
+            android:textSize="32sp"
             android:textStyle="bold"
-            android:layout_gravity="center" />
+            android:fontFamily="sans-serif-medium"
+            android:layout_gravity="center"
+            android:letterSpacing="0.02" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Real-Time Drowsiness Detection System"
-            android:textColor="#b0b0b0"
-            android:textSize="14sp"
+            android:text="AI-Powered Drowsiness Detection System"
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif-light"
             android:layout_gravity="center"
-            android:layout_marginTop="4dp" />
+            android:layout_marginTop="8dp"
+            android:letterSpacing="0.05" />
+
+        <!-- Status Indicator Dots -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:layout_marginTop="12dp">
+            
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/ic_check"
+                android:backgroundTint="@color/status_green"
+                android:layout_marginEnd="4dp" />
+            
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/ic_check"
+                android:backgroundTint="@color/status_blue"
+                android:layout_marginEnd="4dp" />
+                
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/ic_check"
+                android:backgroundTint="@color/accent_cyan" />
+                
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Camera Preview toàn màn hình -->
-    <FrameLayout
-        android:id="@+id/cameraContainer"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="#000000"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintBottom_toTopOf="@id/statusPanel"
-        app:layout_constraintHeight_percent="0.65">
-
-        <androidx.camera.view.PreviewView
-            android:id="@+id/previewView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop" />
-
-        <!-- Overlay for detection visualization -->
-        <ImageView
-            android:id="@+id/overlayImageView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="matrix"
-            android:alpha="1.0"
-            android:visibility="visible" />
-
-        <!-- Camera status overlay -->
-        <TextView
-            android:id="@+id/tvCameraStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|center"
-            android:layout_marginTop="20dp"
-            android:text="CAMERA READY"
-            android:textColor="#00ff00"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:background="#80000000"
-            android:padding="8dp"
-            android:visibility="visible" />
-
-    </FrameLayout>
-
-    <!-- Status Panel như dự án gốc -->
-    <LinearLayout
-        android:id="@+id/statusPanel"
-        android:layout_width="match_parent"
+    <!-- Guideline để chia layout -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_camera_bottom"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="#1a1a1a"
-        android:padding="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.65" />
+
+    <!-- Enhanced Camera Preview with Modern Frame -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cameraCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="@color/surface_dark"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="12dp"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toTopOf="@id/guideline_camera_bottom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <FrameLayout
+            android:id="@+id/cameraContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/surface_dark">
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/previewView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:layout_margin="4dp" />
+
+            <!-- Overlay for detection visualization -->
+            <ImageView
+                android:id="@+id/overlayImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="matrix"
+                android:alpha="1.0"
+                android:visibility="visible" />
+
+            <!-- Modern Camera Status Overlay -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|center"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/glass_background"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp">
+
+                <TextView
+                    android:id="@+id/tvCameraStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📹 CAMERA READY"
+                    android:textColor="@color/status_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:visibility="visible" />
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Recording Indicator -->
+            <View
+                android:id="@+id/recordingIndicator"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="20dp"
+                android:background="@drawable/ic_check"
+                android:backgroundTint="@color/status_red"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Enhanced Status Panel with Modern Design -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/statusPanel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:cardBackgroundColor="@color/card_elevated"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_camera_bottom"
         app:layout_constraintBottom_toTopOf="@id/controlPanel">
 
-        <!-- Main Status Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/statusIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_check"
-                android:tint="#00ff00" />
-
-            <TextView
-                android:id="@+id/tvStatus"
-                android:layout_width="0dp"
+            <!-- Main Status Row with Enhanced Design -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="SYSTEM READY"
-                android:textSize="16sp"
-                android:textColor="#ffffff"
-                android:textStyle="bold"
-                android:layout_marginStart="12dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_card_glass"
+                android:padding="12dp"
+                android:layout_marginBottom="12dp">
+
+                <ImageView
+                    android:id="@+id/statusIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_check"
+                    android:tint="@color/status_green"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvStatus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🟢 SYSTEM READY"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <!-- Live indicator -->
+                <View
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:background="@drawable/ic_check"
+                    android:backgroundTint="@color/status_green" />
+
+            </LinearLayout>
+
+            <!-- Enhanced Metrics Row with Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <!-- EAR Metric Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="👁️ EAR"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvEyeRatio"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.000"
+                            android:textSize="18sp"
+                            android:textColor="@color/accent_cyan"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-condensed"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- Frame Counter Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginHorizontal="4dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="📊 FRAMES"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <TextView
+                            android:id="@+id/tvFrameCount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0/5"
+                            android:textSize="18sp"
+                            android:textColor="@color/text_primary"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-condensed"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <!-- Progress Card -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardBackgroundColor="@color/surface_variant"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⚠️ RISK"
+                            android:textSize="11sp"
+                            android:textColor="@color/text_secondary"
+                            android:fontFamily="sans-serif-medium" />
+
+                        <ProgressBar
+                            android:id="@+id/progressBar"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="50dp"
+                            android:layout_height="6dp"
+                            android:layout_marginTop="4dp"
+                            android:progress="0"
+                            android:max="100"
+                            android:progressDrawable="@drawable/bg_progress_gradient"
+                            android:progressBackgroundTint="@color/outline" />
+
+                        <TextView
+                            android:id="@+id/tvRiskPercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0%"
+                            android:textSize="12sp"
+                            android:textColor="@color/text_primary"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-condensed"
+                            android:layout_marginTop="2dp" />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Metrics Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+    </androidx.cardview.widget.CardView>
 
-            <!-- EAR Value -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="EAR"
-                    android:textSize="12sp"
-                    android:textColor="#888888" />
-
-                <TextView
-                    android:id="@+id/tvEyeRatio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0.000"
-                    android:textSize="18sp"
-                    android:textColor="#00ff00"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- Frame Counter -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="FRAMES"
-                    android:textSize="12sp"
-                    android:textColor="#888888" />
-
-                <TextView
-                    android:id="@+id/tvFrameCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0/5"
-                    android:textSize="18sp"
-                    android:textColor="#ffffff"
-                    android:textStyle="bold" />
-
-            </LinearLayout>
-
-            <!-- Progress Indicator -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="2"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="DROWSINESS LEVEL"
-                    android:textSize="12sp"
-                    android:textColor="#888888" />
-
-                <ProgressBar
-                    android:id="@+id/progressBar"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="100dp"
-                    android:layout_height="8dp"
-                    android:layout_marginTop="4dp"
-                    android:progress="0"
-                    android:max="100"
-                    android:progressTint="#00ff00" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-    <!-- Control Panel -->
+    <!-- Enhanced Control Panel with Modern Button Design -->
     <androidx.cardview.widget.CardView
         android:id="@+id/controlPanel"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:cardBackgroundColor="#2a2a2a"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="8dp"
+        app:cardBackgroundColor="@color/card_elevated"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/buttonCard"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="12dp"
-            app:cardBackgroundColor="#3d5afe"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground">
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <!-- Main Action Button -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/buttonCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/btnIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_play"
+                        android:tint="@color/text_on_primary" />
+
+                    <TextView
+                        android:id="@+id/btnToggle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🚀 Start Detection"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginStart="12dp" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Quick Stats Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:padding="16dp">
-
-                <ImageView
-                    android:id="@+id/btnIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_play"
-                    android:tint="#ffffff" />
+                android:background="@drawable/bg_card_glass"
+                android:padding="8dp">
 
                 <TextView
-                    android:id="@+id/btnToggle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Start Detection"
-                    android:textColor="#ffffff"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginStart="12dp" />
+                    android:text="⏱️ Session: 00:00"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginEnd="16dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 Accuracy: 98.5%"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:fontFamily="sans-serif-medium" />
 
             </LinearLayout>
 
-        </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
     </androidx.cardview.widget.CardView>
 

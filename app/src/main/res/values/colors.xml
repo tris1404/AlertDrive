@@ -8,21 +8,53 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
+    <!-- Modern Dark Theme Colors -->
+    <color name="background_dark">#0D1117</color>
+    <color name="surface_dark">#161B22</color>
+    <color name="surface_variant">#21262D</color>
+    <color name="outline">#30363D</color>
+    
+    <!-- Primary Colors -->
+    <color name="primary">#238636</color>
+    <color name="primary_dark">#1F7A2E</color>
+    <color name="primary_light">#2EA043</color>
+    
     <!-- Status Colors -->
     <color name="status_green">#28a745</color>
-    <color name="status_yellow">#ffc107</color>
+    <color name="status_yellow">#f39c12</color>
+    <color name="status_orange">#fd7e14</color>
     <color name="status_red">#dc3545</color>
+    <color name="status_blue">#0066cc</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#F0F6FC</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_tertiary">#6E7681</color>
+    <color name="text_on_primary">#FFFFFF</color>
     
     <!-- UI Colors -->
-    <color name="card_background">#FFFFFF</color>
-    <color name="text_primary">#212529</color>
-    <color name="text_secondary">#6c757d</color>
-    <color name="background_light">#f8f9fa</color>
-    <color name="accent_blue">#667eea</color>
-    <color name="accent_purple">#764ba2</color>
+    <color name="card_background">#21262D</color>
+    <color name="card_elevated">#2D333B</color>
+    <color name="divider">#30363D</color>
+    
+    <!-- Accent Colors -->
+    <color name="accent_blue">#58A6FF</color>
+    <color name="accent_purple">#A855F7</color>
+    <color name="accent_cyan">#39D0D8</color>
+    <color name="accent_pink">#F85149</color>
     
     <!-- Gradient Colors -->
     <color name="gradient_start">#667eea</color>
     <color name="gradient_center">#764ba2</color>
     <color name="gradient_end">#f093fb</color>
+    
+    <!-- Alert Colors -->
+    <color name="alert_success">#238636</color>
+    <color name="alert_warning">#9A6700</color>
+    <color name="alert_danger">#DA3633</color>
+    <color name="alert_info">#0969DA</color>
+    
+    <!-- Glassmorphism -->
+    <color name="glass_background">#1A21262D</color>
+    <color name="glass_stroke">#33F0F6FC</color>
 </resources>

@@ -49,29 +49,29 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         Log.d("MainActivity", "=== onCreate started ===")
-        
+
         alertManager = AlertManager(this)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         setupClickListeners()
-        
+
         // Test PreviewView availability
         val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
         Log.d("MainActivity", "PreviewView in onCreate: ${previewView != null}")
-        
+
         // Không auto-start camera khi mở app
         Log.d("MainActivity", "App started - camera will start when user enables detection")
-        
+
         Log.d("MainActivity", "=== onCreate completed ===")
     }
 
     private fun setupClickListeners() {
         try {
             Log.d("MainActivity", "=== Setting up click listeners ===")
-            
+
             // Sử dụng ID button card trực tiếp
             val buttonCard = findViewById<androidx.cardview.widget.CardView>(R.id.buttonCard)
-            
+
             if (buttonCard != null) {
                 buttonCard.setOnClickListener {
                     Log.d("MainActivity", "🎯 Button CardView CLICKED!")
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Log.e("MainActivity", "❌ buttonCard not found!")
             }
-            
+
             // Backup: Click listener cho TextView
             val btnText = findViewById<android.widget.TextView>(R.id.btnToggle)
             if (btnText != null) {
@@ -93,34 +93,34 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Log.e("MainActivity", "❌ btnToggle TextView not found!")
             }
-            
+
             // Test method: Long click to trigger test alert
             buttonCard?.setOnLongClickListener {
                 Log.d("MainActivity", "🧪 LONG CLICK - Testing alert system")
                 testAlertSystem()
                 true
             }
-            
+
             // Test click programmatically
             Log.d("MainActivity", "Testing programmatic click...")
             buttonCard?.post {
                 Log.d("MainActivity", "Button card post executed")
             }
-            
+
             Log.d("MainActivity", "=== Click listeners setup completed ===")
-            
+
         } catch (e: Exception) {
             Log.e("MainActivity", "❌ Error setting up click listener", e)
         }
     }
-    
+
     /**
      * Test method để kiểm tra alert system hoạt động
      */
     private fun testAlertSystem() {
         Log.d("MainActivity", "🧪 Testing alert system...")
         Toast.makeText(this, "🧪 Testing Alert System", Toast.LENGTH_SHORT).show()
-        
+
         // Test critical alert
         val testState = DrowsinessState(
             faceDetected = true,
@@ -128,10 +128,10 @@ class MainActivity : AppCompatActivity() {
             consecutiveClosedFrames = 5,  // Đạt ngưỡng nguy hiểm
             alertLevel = AlertLevel.CRITICAL
         )
-        
+
         updateUI(testState)
         alertManager.handleAlert(AlertLevel.CRITICAL)
-        
+
         // Reset sau 3 giây
         findViewById<android.widget.TextView>(R.id.btnToggle)?.postDelayed({
             alertManager.handleAlert(AlertLevel.NORMAL)
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "🧪 Test completed", Toast.LENGTH_SHORT).show()
         }, 3000)
     }
-    
+
     private fun toggleDetection() {
         Log.d("MainActivity", "=== TOGGLE DETECTION CALLED ===")
         Log.d("MainActivity", "Current state: isDetectionActive=$isDetectionActive, isCameraStarted=$isCameraStarted")
@@ -157,7 +157,7 @@ class MainActivity : AppCompatActivity() {
 
         val btnIcon = findViewById<android.widget.ImageView>(R.id.btnIcon)
         btnIcon?.setImageResource(
-            if (isDetectionActive) R.drawable.ic_pause 
+            if (isDetectionActive) R.drawable.ic_pause
             else R.drawable.ic_play
         )
 
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkCameraPermission() {
         Log.d("MainActivity", "=== CHECKING CAMERA PERMISSION ===")
         Log.d("MainActivity", "isDetectionActive: $isDetectionActive")
-        
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
             == PackageManager.PERMISSION_GRANTED) {
             Log.d("MainActivity", "✅ Camera permission GRANTED, starting camera")
@@ -205,7 +205,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Stopping camera...")
             cameraProvider?.unbindAll()
             isCameraStarted = false
-            
+
             // Clear preview
             val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
             previewView?.let {
@@ -214,22 +214,22 @@ class MainActivity : AppCompatActivity() {
                     // Surface will be cleared automatically when unbound
                 }
             }
-            
+
             Log.d("MainActivity", "Camera stopped successfully")
         } catch (e: Exception) {
             Log.e("MainActivity", "Error stopping camera", e)
         }
     }
-    
+
     // Thêm method để retry camera với timeout handling
     private fun retryCameraStart() {
         if (!isDetectionActive) return
-        
+
         Log.d("MainActivity", "Retrying camera start due to timeout...")
-        
+
         // Stop current camera first
         stopCamera()
-        
+
         // Wait a bit before retry
         cameraExecutor.execute {
             try {
@@ -248,46 +248,46 @@ class MainActivity : AppCompatActivity() {
             Log.d("MainActivity", "Detection not active, skipping camera start")
             return
         }
-        
+
         Log.d("MainActivity", "=== STARTING CAMERA ===")
-        
+
         // Đơn giản hóa - gọi trực tiếp
         startCameraInternal()
     }
-    
+
     private fun startCameraInternal() {
         Log.d("MainActivity", "=== STARTING SIMPLE CAMERA ===")
-        
+
         if (isCameraStarted) {
             Log.d("MainActivity", "Camera already started")
             return
         }
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        
+
         cameraProviderFuture.addListener({
             try {
                 Log.d("MainActivity", "Camera provider future completed")
                 cameraProvider = cameraProviderFuture.get()
-                
+
                 Log.d("MainActivity", "Camera provider obtained")
-                
+
                 // Unbind everything first
                 cameraProvider?.unbindAll()
-                
+
                 // Create simplest preview possible
                 val preview = Preview.Builder().build()
-                
+
                 // Get PreviewView
                 val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
                 if (previewView == null) {
                     Log.e("MainActivity", "❌ PreviewView is NULL!")
                     return@addListener
                 }
-                
+
                 Log.d("MainActivity", "PreviewView found, setting surface provider...")
                 preview.setSurfaceProvider(previewView.surfaceProvider)
-                
+
                 // Try to bind with front camera first (for drowsiness detection)
                 try {
                     Log.d("MainActivity", "Attempting to bind front camera...")
@@ -296,34 +296,34 @@ class MainActivity : AppCompatActivity() {
                         CameraSelector.DEFAULT_FRONT_CAMERA,  // Sử dụng camera trước
                         preview
                     )
-                    
+
                     if (camera != null) {
                         Log.d("MainActivity", "✅ FRONT CAMERA SUCCESS!")
                         Toast.makeText(this@MainActivity, "✅ Camera trước đã hoạt động!", Toast.LENGTH_LONG).show()
                         isCameraStarted = true
-                        
+
                         // Thêm analyzer sau khi camera đã hoạt động
                         tryAddAnalyzer(preview)
                     } else {
                         Log.e("MainActivity", "❌ Front camera binding returned null")
                         Toast.makeText(this@MainActivity, "❌ Camera trước không hoạt động", Toast.LENGTH_LONG).show()
                     }
-                    
+
                 } catch (e: Exception) {
                     Log.e("MainActivity", "❌ Front camera binding exception: ${e.message}", e)
                     Toast.makeText(this@MainActivity, "❌ Front camera error: ${e.message}", Toast.LENGTH_LONG).show()
-                    
+
                     // Thử với back camera nếu front camera thất bại
                     tryBackCamera(preview)
                 }
-                
+
             } catch (e: Exception) {
                 Log.e("MainActivity", "❌ Camera provider exception: ${e.message}", e)
                 Toast.makeText(this@MainActivity, "❌ Camera provider error: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }, ContextCompat.getMainExecutor(this))
     }
-    
+
     private fun tryBackCamera(preview: Preview) {
         try {
             Log.d("MainActivity", "Trying back camera as fallback...")
@@ -332,12 +332,12 @@ class MainActivity : AppCompatActivity() {
                 CameraSelector.DEFAULT_BACK_CAMERA,  // Camera sau làm fallback
                 preview
             )
-            
+
             if (camera != null) {
                 Log.d("MainActivity", "✅ BACK CAMERA SUCCESS!")
                 Toast.makeText(this, "✅ Camera sau đã hoạt động!", Toast.LENGTH_LONG).show()
                 isCameraStarted = true
-                
+
                 // Thêm analyzer sau khi camera đã hoạt động
                 tryAddAnalyzer(preview)
             } else {
@@ -349,7 +349,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "❌ Back camera error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
-    
+
     private fun tryAddAnalyzer(preview: Preview) {
         try {
             Log.d("MainActivity", "Adding face analyzer...")
@@ -419,7 +419,7 @@ class MainActivity : AppCompatActivity() {
         val statusIcon = findViewById<android.widget.ImageView>(R.id.statusIcon)
         val statusText = findViewById<android.widget.TextView>(R.id.tvStatus)
         val cameraStatus = findViewById<android.widget.TextView>(R.id.tvCameraStatus)
-        
+
         when (state.alertLevel) {
             AlertLevel.NORMAL -> {
                 val statusMessage = if (state.faceDetected) {
@@ -431,7 +431,7 @@ class MainActivity : AppCompatActivity() {
                 statusText?.setTextColor(ContextCompat.getColor(this, android.R.color.white))
                 statusIcon?.setImageResource(R.drawable.ic_check)
                 statusIcon?.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_green_light))
-                
+
                 cameraStatus?.text = if (state.faceDetected) "FACE DETECTED - MONITORING" else "POSITION FACE IN CAMERA"
                 cameraStatus?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_light))
             }
@@ -441,7 +441,7 @@ class MainActivity : AppCompatActivity() {
                 statusText?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
                 statusIcon?.setImageResource(R.drawable.ic_warning)
                 statusIcon?.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_orange_light))
-                
+
                 cameraStatus?.text = "⚠️ DROWSINESS WARNING - STAY ALERT"
                 cameraStatus?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_light))
             }
@@ -451,7 +451,7 @@ class MainActivity : AppCompatActivity() {
                 statusText?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
                 statusIcon?.setImageResource(R.drawable.ic_danger)
                 statusIcon?.setColorFilter(ContextCompat.getColor(this, android.R.color.holo_red_light))
-                
+
                 cameraStatus?.text = "🚨 DROWSINESS ALERT - WAKE UP!"
                 cameraStatus?.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light))
             }
@@ -460,7 +460,7 @@ class MainActivity : AppCompatActivity() {
         // Update EAR value theo format dự án gốc
         val earText = findViewById<android.widget.TextView>(R.id.tvEyeRatio)
         earText?.text = "%.3f".format(state.eyeAspectRatio)
-        
+
         // Color code EAR theo ngưỡng 0.25 của dự án gốc
         val earColor = when {
             state.eyeAspectRatio < 0.25f -> ContextCompat.getColor(this, android.R.color.holo_red_light)    // Dưới ngưỡng nguy hiểm
@@ -468,12 +468,12 @@ class MainActivity : AppCompatActivity() {
             else -> ContextCompat.getColor(this, android.R.color.holo_green_light)                         // An toàn
         }
         earText?.setTextColor(earColor)
-        
+
         // Update frame count theo ngưỡng 5 frames của dự án gốc
         val frameText = findViewById<android.widget.TextView>(R.id.tvFrameCount)
         val frameDisplay = "${state.consecutiveClosedFrames}/5"
         frameText?.text = frameDisplay
-        
+
         // Color code frame count theo ngưỡng nguy hiểm
         val frameColor = when {
             state.consecutiveClosedFrames >= 5 -> ContextCompat.getColor(this, android.R.color.holo_red_light)     // NGUY HIỂM
@@ -487,7 +487,7 @@ class MainActivity : AppCompatActivity() {
         val maxFrames = 5 // Như dự án gốc
         val progress = (state.consecutiveClosedFrames * 100 / maxFrames).coerceAtMost(100)
         progressBar?.progress = progress
-        
+
         // Update progress bar color theo mức độ nguy hiểm
         val progressColor = when {
             progress >= 100 -> ContextCompat.getColor(this, android.R.color.holo_red_light)    // 5/5 frames = CRITICAL
@@ -508,7 +508,7 @@ class MainActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         Log.d("MainActivity", "Orientation changed: ${newConfig.orientation}")
-        
+
         // Không restart camera cho orientation change để tránh lỗi
         // Camera sẽ tự động adapt với orientation mới
         Log.d("MainActivity", "Orientation change handled without camera restart")
