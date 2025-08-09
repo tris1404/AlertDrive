@@ -8,53 +8,63 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- Modern Dark Theme Colors -->
-    <color name="background_dark">#0D1117</color>
-    <color name="surface_dark">#161B22</color>
-    <color name="surface_variant">#21262D</color>
-    <color name="outline">#30363D</color>
+    <!-- 4 Màu Chủ Đạo Theo Yêu Cầu -->
+    <color name="green_lightest">#EAF9E7</color>     <!-- Xanh nhạt -->
+    <color name="green_light">#C0E6BA</color>        <!-- Xanh trung bình -->
+    <color name="green_medium">#4CA771</color>       <!-- Xanh đậm -->
+    <color name="green_dark">#013237</color>         <!-- Xanh tối -->
+    
+    <!-- Background Colors with White -->
+    <color name="background_main">#FFFFFF</color>     <!-- Nền chính màu trắng -->
+    <color name="background_secondary">#EAF9E7</color> <!-- Nền phụ xanh nhạt -->
+    <color name="background_dark">#013237</color>     <!-- Nền tối cho night mode -->
+    <color name="surface_light">#FFFFFF</color>       <!-- Surface trắng -->
+    <color name="surface_dark">#013237</color>        <!-- Surface tối -->
+    <color name="surface_variant">#C0E6BA</color>     <!-- Surface xanh nhạt -->
+    <color name="outline">#C0E6BA</color>             <!-- Đường viền xanh nhạt -->
     
     <!-- Primary Colors -->
-    <color name="primary">#238636</color>
-    <color name="primary_dark">#1F7A2E</color>
-    <color name="primary_light">#2EA043</color>
+    <color name="primary">#4CA771</color>           <!-- Xanh đậm làm màu chính -->
+    <color name="primary_dark">#013237</color>      <!-- Xanh tối -->
+    <color name="primary_light">#C0E6BA</color>     <!-- Xanh nhạt -->
     
     <!-- Status Colors -->
-    <color name="status_green">#28a745</color>
+    <color name="status_green">#4CA771</color>
     <color name="status_yellow">#f39c12</color>
     <color name="status_orange">#fd7e14</color>
     <color name="status_red">#dc3545</color>
     <color name="status_blue">#0066cc</color>
     
     <!-- Text Colors -->
-    <color name="text_primary">#F0F6FC</color>
-    <color name="text_secondary">#8B949E</color>
-    <color name="text_tertiary">#6E7681</color>
-    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_primary">#013237</color>      <!-- Text chính màu xanh tối -->
+    <color name="text_secondary">#4CA771</color>    <!-- Text phụ màu xanh đậm -->
+    <color name="text_tertiary">#6E7681</color>     <!-- Text mờ -->
+    <color name="text_on_primary">#FFFFFF</color>   <!-- Text trên nền xanh -->
+    <color name="text_on_light">#013237</color>     <!-- Text trên nền sáng -->
     
     <!-- UI Colors -->
-    <color name="card_background">#21262D</color>
-    <color name="card_elevated">#2D333B</color>
-    <color name="divider">#30363D</color>
+    <color name="card_background">#FFFFFF</color>    <!-- Card nền trắng -->
+    <color name="card_elevated">#EAF9E7</color>     <!-- Card nổi xanh nhạt -->
+    <color name="divider">#C0E6BA</color>           <!-- Đường phân cách -->
     
     <!-- Accent Colors -->
-    <color name="accent_blue">#58A6FF</color>
-    <color name="accent_purple">#A855F7</color>
-    <color name="accent_cyan">#39D0D8</color>
-    <color name="accent_pink">#F85149</color>
+    <color name="accent_blue">#0066cc</color>
+    <color name="accent_purple">#4CA771</color>
+    <color name="accent_cyan">#013237</color>
+    <color name="accent_pink">#C0E6BA</color>
     
     <!-- Gradient Colors -->
-    <color name="gradient_start">#667eea</color>
-    <color name="gradient_center">#764ba2</color>
-    <color name="gradient_end">#f093fb</color>
+    <color name="gradient_start">#4CA771</color>     <!-- Xanh đậm -->
+    <color name="gradient_center">#C0E6BA</color>    <!-- Xanh trung bình -->
+    <color name="gradient_end">#EAF9E7</color>       <!-- Xanh nhạt -->
     
     <!-- Alert Colors -->
-    <color name="alert_success">#238636</color>
-    <color name="alert_warning">#9A6700</color>
-    <color name="alert_danger">#DA3633</color>
-    <color name="alert_info">#0969DA</color>
+    <color name="alert_success">#4CA771</color>
+    <color name="alert_warning">#f39c12</color>
+    <color name="alert_danger">#dc3545</color>
+    <color name="alert_info">#0066cc</color>
     
     <!-- Glassmorphism -->
-    <color name="glass_background">#1A21262D</color>
-    <color name="glass_stroke">#33F0F6FC</color>
+    <color name="glass_background">#4DEAF9E7</color>  <!-- Xanh nhạt trong suốt -->
+    <color name="glass_stroke">#4DC0E6BA</color>      <!-- Viền xanh nhạt -->
 </resources>

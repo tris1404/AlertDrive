@@ -33,7 +33,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="AI-Powered Drowsiness Detection System"
-            android:textColor="@color/text_secondary"
+            android:textColor="@color/text_on_primary"
             android:textSize="16sp"
             android:fontFamily="sans-serif-light"
             android:layout_gravity="center"
@@ -78,15 +78,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.65" />
+        app:layout_constraintGuide_percent="0.58" />
 
     <!-- Enhanced Camera Preview with Modern Frame -->
-    <androidx.cardview.widget.CardView
+        <androidx.cardview.widget.CardView
         android:id="@+id/cameraCard"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/surface_dark"
+        app:cardBackgroundColor="@color/card_background"
         app:cardCornerRadius="20dp"
         app:cardElevation="12dp"
         app:layout_constraintTop_toBottomOf="@id/header"
@@ -98,9 +98,7 @@
             android:id="@+id/cameraContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/surface_dark">
-
-            <androidx.camera.view.PreviewView
+            android:background="@color/surface_light">            <androidx.camera.view.PreviewView
                 android:id="@+id/previewView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -131,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="📹 CAMERA READY"
-                    android:textColor="@color/status_green"
+                    android:textColor="@color/primary"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:fontFamily="sans-serif-medium"
@@ -162,9 +160,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:cardBackgroundColor="@color/card_elevated"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        app:cardBackgroundColor="@color/card_background"
         app:cardCornerRadius="16dp"
         app:cardElevation="8dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -184,7 +182,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:background="@drawable/bg_card_glass"
+                android:background="@color/green_lightest"
                 android:padding="12dp"
                 android:layout_marginBottom="12dp">
 
@@ -193,7 +191,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_check"
-                    android:tint="@color/status_green"
+                    android:tint="@color/primary"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
@@ -212,7 +210,7 @@
                     android:layout_width="6dp"
                     android:layout_height="6dp"
                     android:background="@drawable/ic_check"
-                    android:backgroundTint="@color/status_green" />
+                    android:backgroundTint="@color/primary" />
 
             </LinearLayout>
 
@@ -228,8 +226,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginEnd="8dp"
-                    app:cardBackgroundColor="@color/surface_variant"
+                    android:layout_marginEnd="6dp"
+                    app:cardBackgroundColor="@color/card_background"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp">
 
@@ -238,14 +236,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="10dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="👁️ EAR"
                             android:textSize="11sp"
-                            android:textColor="@color/text_secondary"
+                            android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
 
                         <TextView
@@ -253,8 +251,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0.000"
-                            android:textSize="18sp"
-                            android:textColor="@color/accent_cyan"
+                            android:textSize="16sp"
+                            android:textColor="@color/primary"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-condensed"
                             android:layout_marginTop="2dp" />
@@ -268,8 +266,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginHorizontal="4dp"
-                    app:cardBackgroundColor="@color/surface_variant"
+                    android:layout_marginHorizontal="3dp"
+                    app:cardBackgroundColor="@color/card_background"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp">
 
@@ -278,14 +276,14 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="10dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="📊 FRAMES"
                             android:textSize="11sp"
-                            android:textColor="@color/text_secondary"
+                            android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
 
                         <TextView
@@ -293,8 +291,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0/5"
-                            android:textSize="18sp"
-                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textColor="@color/primary"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-condensed"
                             android:layout_marginTop="2dp" />
@@ -308,8 +306,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:layout_marginStart="8dp"
-                    app:cardBackgroundColor="@color/surface_variant"
+                    android:layout_marginStart="6dp"
+                    app:cardBackgroundColor="@color/card_background"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp">
 
@@ -318,34 +316,34 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:gravity="center"
-                        android:padding="12dp">
+                        android:padding="10dp">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="⚠️ RISK"
                             android:textSize="11sp"
-                            android:textColor="@color/text_secondary"
+                            android:textColor="@color/text_primary"
                             android:fontFamily="sans-serif-medium" />
 
                         <ProgressBar
                             android:id="@+id/progressBar"
                             style="?android:attr/progressBarStyleHorizontal"
                             android:layout_width="50dp"
-                            android:layout_height="6dp"
+                            android:layout_height="8dp"
                             android:layout_marginTop="4dp"
                             android:progress="0"
                             android:max="100"
                             android:progressDrawable="@drawable/bg_progress_gradient"
-                            android:progressBackgroundTint="@color/outline" />
+                            android:progressBackgroundTint="@color/green_lightest" />
 
                         <TextView
                             android:id="@+id/tvRiskPercent"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0%"
-                            android:textSize="12sp"
-                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            android:textColor="@color/primary"
                             android:textStyle="bold"
                             android:fontFamily="sans-serif-condensed"
                             android:layout_marginTop="2dp" />
@@ -366,7 +364,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:cardBackgroundColor="@color/card_elevated"
+        app:cardBackgroundColor="@color/card_background"
         app:cardCornerRadius="20dp"
         app:cardElevation="12dp"
         app:layout_constraintStart_toStartOf="parent"
@@ -377,7 +375,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="14dp">
 
             <!-- Main Action Button -->
             <androidx.cardview.widget.CardView
@@ -427,14 +425,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:background="@drawable/bg_card_glass"
+                android:background="@color/green_lightest"
                 android:padding="8dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="⏱️ Session: 00:00"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/text_primary"
                     android:textSize="12sp"
                     android:fontFamily="sans-serif-medium"
                     android:layout_marginEnd="16dp" />
@@ -443,7 +441,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎯 Accuracy: 98.5%"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="@color/text_primary"
                     android:textSize="12sp"
                     android:fontFamily="sans-serif-medium" />
 
