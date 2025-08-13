@@ -20,6 +20,44 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+    // Hiển thị dialog chọn âm thanh từ res/raw
+    private fun showSoundPickerDialog() {
+        val rawRes = R.raw::class.java.fields
+        val soundNames = rawRes.map { it.name }.toTypedArray()
+        val context = this
+        android.app.AlertDialog.Builder(context)
+            .setTitle("Chọn âm thanh")
+            .setItems(soundNames) { _, which ->
+                val resId = rawRes[which].getInt(null)
+                playRawSound(resId)
+            }
+            .setNegativeButton("Đóng", null)
+            .show()
+    }
+
+    // Phát thử âm thanh từ res/raw
+    private fun playRawSound(resId: Int) {
+        try {
+            mediaPlayer?.release()
+            mediaPlayer = android.media.MediaPlayer.create(this, resId)
+            mediaPlayer?.setOnCompletionListener {
+                it.release()
+            }
+            mediaPlayer?.start()
+            // Dừng sau 5 giây nếu chưa kết thúc
+            mediaPlayer?.let { mp ->
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    if (mp.isPlaying) {
+                        mp.stop()
+                        mp.release()
+                    }
+                }, 5000)
+            }
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, "Không phát được âm thanh", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    private var mediaPlayer: android.media.MediaPlayer? = null
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
@@ -54,6 +92,12 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         setupClickListeners()
+
+        // Thiết lập click cho nút chọn âm thanh
+        val btnSelectSound = findViewById<android.widget.LinearLayout>(R.id.btnSelectSound2)
+        btnSelectSound?.setOnClickListener {
+            showSoundPickerDialog()
+        }
 
         // Test PreviewView availability
         val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
@@ -502,6 +546,8 @@ class MainActivity : AppCompatActivity() {
         stopCamera()
         cameraExecutor.shutdown()
         alertManager.release()
+    mediaPlayer?.release()
+    mediaPlayer = null
     }
 
     // Handle orientation changes - đơn giản hóa  

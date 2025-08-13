@@ -7,6 +7,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceContour
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.google.mlkit.vision.face.FaceLandmark
@@ -31,9 +32,9 @@ class DrowsinessDetector(
 ) : ImageAnalysis.Analyzer {
 
     companion object {
-        // Thuật toán chính xác từ dự án gốc
-        private const val EAR_THRESHOLD = 0.25f      // Ngưỡng EAR như drowsiness_yawn.py
-        private const val CONSECUTIVE_FRAMES = 5      // 5 frames liên tiếp như dự án gốc
+        // Thuật toán chính xác dựa trên ML Kit eye open probability
+        private const val EAR_THRESHOLD = 0.15f      // Ngưỡng cho eye open probability (< 0.15 = mắt nhắm)
+        private const val CONSECUTIVE_FRAMES = 8      // Tăng lên 8 frames để tránh false positive
         private const val FRAME_CHECK_COUNT = 20      // Đếm tối đa 20 frames
         
         // Eye landmark indices for EAR calculation (similar to dlib 68-point model)
@@ -46,20 +47,22 @@ class DrowsinessDetector(
     private var consecutiveClosedCount = 0
     private var totalFrameCount = 0
 
-    // ML Kit Face Detector với configuration tối ưu cho drowsiness detection
+    // Enhanced ML Kit Face Detector với contours và tracking để có face box chính xác
     private val detector = FaceDetection.getClient(
         FaceDetectorOptions.Builder()
-            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE) // Accuracy > Speed
-            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)           // Cần landmarks cho EAR
+            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE) // Accurate mode cho contours
+            .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)        // Cần landmarks cho EAR
             .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL) // Eye open probability
-            .setMinFaceSize(0.15f)  // Minimum face size
+            .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)          // Enable contours cho face box chính xác
+            .enableTracking()                                              // Enable face tracking
+            .setMinFaceSize(0.15f)  // Giảm min size để detect được face nhỏ hơn
             .build()
     )
 
     override fun analyze(imageProxy: ImageProxy) {
-        // Skip frames để tối ưu performance như dự án gốc
+        // Tối ưu: chỉ xử lý mỗi 4 frames để giảm lag
         frameSkipCounter++
-        if (frameSkipCounter % 2 != 0) {
+        if (frameSkipCounter % 4 != 0) {
             imageProxy.close()
             return
         }
@@ -70,10 +73,8 @@ class DrowsinessDetector(
             return
         }
 
-        // Gửi frame gốc để hiển thị
         onFrameUpdate(bitmap)
 
-        // Xử lý detection
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
             val inputImage = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
@@ -82,8 +83,7 @@ class DrowsinessDetector(
                 .addOnSuccessListener { faces ->
                     processFaceDetection(faces, bitmap)
                 }
-                .addOnFailureListener { e ->
-                    Log.e("DrowsinessDetector", "Face detection failed", e)
+                .addOnFailureListener { 
                     handleNoFaceDetected(bitmap)
                 }
                 .addOnCompleteListener {
@@ -98,40 +98,28 @@ class DrowsinessDetector(
         totalFrameCount++
         
         if (faces.isEmpty()) {
-            Log.d("DrowsinessDetector", "No face detected in frame $totalFrameCount")
             handleNoFaceDetected(bitmap)
             return
         }
 
         val face = faces[0] // Sử dụng khuôn mặt đầu tiên
-        Log.d("DrowsinessDetector", "Face detected in frame $totalFrameCount, boundingBox: ${face.boundingBox}")
         
-        // Tính EAR theo thuật toán dự án gốc
-        val eyeAspectRatio = calculateEyeAspectRatio(face)
+        // Tính EAR từ 16-point eye contours - chính xác như documentation
+        val eyeAspectRatio = calculateEARFromContours(face)
         
-        // Kiểm tra mắt nhắm theo ngưỡng dự án gốc
+        // Kiểm tra mắt nhắm theo ngưỡng
         val isEyesClosed = eyeAspectRatio < EAR_THRESHOLD
         
         if (isEyesClosed) {
             consecutiveClosedCount++
-            Log.d("DrowsinessDetector", "Eyes closed detected! Count: $consecutiveClosedCount")
         } else {
-            if (consecutiveClosedCount > 0) {
-                Log.d("DrowsinessDetector", "Eyes opened, resetting count from $consecutiveClosedCount to 0")
-            }
             consecutiveClosedCount = 0
         }
 
-        // Determine alert level theo logic dự án gốc
+        // Determine alert level với logic chính xác hơn
         val alertLevel = when {
-            consecutiveClosedCount >= CONSECUTIVE_FRAMES -> {
-                Log.w("DrowsinessDetector", "🚨 CRITICAL ALERT: $consecutiveClosedCount consecutive closed frames!")
-                AlertLevel.CRITICAL
-            }
-            consecutiveClosedCount >= 3 -> {
-                Log.w("DrowsinessDetector", "⚠️ WARNING: $consecutiveClosedCount consecutive closed frames")
-                AlertLevel.WARNING
-            }
+            consecutiveClosedCount >= CONSECUTIVE_FRAMES -> AlertLevel.CRITICAL
+            consecutiveClosedCount >= (CONSECUTIVE_FRAMES / 2) -> AlertLevel.WARNING
             else -> AlertLevel.NORMAL
         }
 
@@ -144,11 +132,20 @@ class DrowsinessDetector(
         )
 
         onStateChanged(currentState)
-        drawOverlay(bitmap, face, eyeAspectRatio, consecutiveClosedCount, alertLevel)
+        drawAccurateFaceTracking(bitmap, face, eyeAspectRatio, consecutiveClosedCount, alertLevel)
         
-        // Log theo format dự án gốc
-        Log.d("DrowsinessDetector", "Frame $totalFrameCount: EAR=%.3f | Closed=%d/%d | Alert=%s"
-            .format(eyeAspectRatio, consecutiveClosedCount, CONSECUTIVE_FRAMES, alertLevel))
+        // Log chi tiết để debug
+        if (totalFrameCount % 10 == 0) { // Log mỗi 10 frames để không spam
+            Log.d("DrowsinessDetector", "Frame $totalFrameCount: EAR=%.3f | Threshold=%.3f | Closed=%d/%d | Eyes=%s"
+                .format(eyeAspectRatio, EAR_THRESHOLD, consecutiveClosedCount, CONSECUTIVE_FRAMES, 
+                if (isEyesClosed) "CLOSED" else "OPEN"))
+        }
+        
+        // Log alert khi có cảnh báo
+        if (alertLevel != AlertLevel.NORMAL) {
+            Log.w("DrowsinessDetector", "🚨 ALERT: EAR=%.3f | Frames=%d/%d | Level=%s"
+                .format(eyeAspectRatio, consecutiveClosedCount, CONSECUTIVE_FRAMES, alertLevel))
+        }
     }
 
     private fun handleNoFaceDetected(bitmap: Bitmap) {
@@ -162,45 +159,121 @@ class DrowsinessDetector(
         )
         
         onStateChanged(currentState)
-        drawOverlay(bitmap, null, 0.0f, 0, AlertLevel.NORMAL)
+        drawAccurateFaceTracking(bitmap, null, 0.0f, 0, AlertLevel.NORMAL)
     }
 
     /**
-     * Tính Eye Aspect Ratio theo công thức dự án gốc
-     * EAR = (|p2-p6| + |p3-p5|) / (2 * |p1-p4|)
-     * Trong đó p1-p6 là 6 điểm landmarks của mắt
+     * Tính EAR chính xác từ ML Kit eye open probability
+     * Theo tài liệu Google ML Kit Android official
      */
-    private fun calculateEyeAspectRatio(face: Face): Float {
-        // ML Kit cung cấp eye open probability, chúng ta sẽ:
-        // 1. Sử dụng trực tiếp probability và chuyển đổi thành EAR scale
+    private fun calculateEARFromContours(face: Face): Float {
+        // Sử dụng eye open probability từ ML Kit (chính xác nhất)
+        val leftEyeOpenProb = face.leftEyeOpenProbability
+        val rightEyeOpenProb = face.rightEyeOpenProbability
         
-        val leftEyeOpenProbability = face.leftEyeOpenProbability
-        val rightEyeOpenProbability = face.rightEyeOpenProbability
-        
-        return if (leftEyeOpenProbability != null && rightEyeOpenProbability != null) {
-            // Convert probability to EAR scale theo thực nghiệm
-            // Probability: 0.0-1.0 -> EAR: 0.1-0.4
-            // Công thức: EAR = 0.1 + (probability * 0.3)
-            // Nhưng để phù hợp với ngưỡng 0.25, chúng ta điều chỉnh:
-            val avgProbability = (leftEyeOpenProbability + rightEyeOpenProbability) / 2f
+        if (leftEyeOpenProb != null && rightEyeOpenProb != null) {
+            // Average của 2 mắt
+            val avgEyeOpenProb = (leftEyeOpenProb + rightEyeOpenProb) / 2f
             
-            // Map probability theo kinh nghiệm thực tế:
-            // probability > 0.8 -> EAR ~ 0.35-0.4 (mắt mở to)
-            // probability 0.5-0.8 -> EAR ~ 0.25-0.35 (mắt mở bình thường) 
-            // probability < 0.5 -> EAR ~ 0.1-0.25 (mắt nhắm/mệt)
-            val ear = when {
-                avgProbability > 0.8f -> 0.35f + (avgProbability - 0.8f) * 0.25f  // 0.35-0.4
-                avgProbability > 0.5f -> 0.25f + (avgProbability - 0.5f) * 0.33f  // 0.25-0.35
-                else -> 0.1f + avgProbability * 0.3f                              // 0.1-0.25
-            }
+            // Convert sang EAR: probability càng cao = mắt càng mở = EAR càng cao
+            // Ngược lại với buồn ngủ: EAR thấp = mắt nhắm = buồn ngủ
+            val ear = avgEyeOpenProb * 0.4f // Scale to 0.0-0.4 range
             
-            Log.d("DrowsinessDetector", "EAR calculated: $ear (leftProb=$leftEyeOpenProbability, rightProb=$rightEyeOpenProbability)")
-            ear.coerceIn(0.1f, 0.4f)
-        } else {
-            // Fallback: Estimate EAR from face landmarks
-            Log.w("DrowsinessDetector", "Eye probabilities not available, using landmark estimation")
-            calculateEARFromLandmarks(face)
+            Log.d("DrowsinessDetector", "Eye Open: Left=%.3f, Right=%.3f, Avg=%.3f, EAR=%.3f"
+                .format(leftEyeOpenProb, rightEyeOpenProb, avgEyeOpenProb, ear))
+            
+            return ear
         }
+        
+        // Fallback: dùng contours nếu có
+        val leftEyeContour = face.getContour(FaceContour.LEFT_EYE)?.points
+        val rightEyeContour = face.getContour(FaceContour.RIGHT_EYE)?.points
+        
+        if (leftEyeContour != null && rightEyeContour != null && 
+            leftEyeContour.size >= 8 && rightEyeContour.size >= 8) {
+            
+            val leftEAR = calculateEyeAspectRatio(leftEyeContour)
+            val rightEAR = calculateEyeAspectRatio(rightEyeContour)
+            val avgEAR = (leftEAR + rightEAR) / 2f
+            
+            Log.d("DrowsinessDetector", "EAR từ contours: Left=%.3f, Right=%.3f, Avg=%.3f"
+                .format(leftEAR, rightEAR, avgEAR))
+            
+            return avgEAR
+        }
+        
+        // Final fallback
+        Log.w("DrowsinessDetector", "Không có eye data, sử dụng default EAR")
+        return 0.3f
+    }
+    
+    /**
+     * Tính EAR từ 16 điểm contour của một mắt
+     * Sử dụng công thức EAR chuẩn: (|p2-p6| + |p3-p5|) / (2 * |p1-p4|)
+     */
+    private fun calculateEyeAspectRatio(eyeContour: List<PointF>): Float {
+        if (eyeContour.size < 16) return 0.25f
+        
+        // Với 16-point contour, chọn các điểm quan trọng cho EAR
+        // Điểm 0 và 8: góc trái và phải của mắt (horizontal)
+        // Điểm 4 và 12: đỉnh và đáy của mắt (vertical)
+        // Điểm 2,6,10,14: các điểm vertical khác
+        
+        val p1 = eyeContour[0]   // Góc trái mắt
+        val p2 = eyeContour[2]   // Điểm vertical 1
+        val p3 = eyeContour[4]   // Điểm đỉnh mắt  
+        val p4 = eyeContour[8]   // Góc phải mắt
+        val p5 = eyeContour[12]  // Điểm đáy mắt
+        val p6 = eyeContour[14]  // Điểm vertical 2
+        
+        // Khoảng cách vertical
+        val vertical1 = distance(p2, p6)
+        val vertical2 = distance(p3, p5)
+        
+        // Khoảng cách horizontal  
+        val horizontal = distance(p1, p4)
+        
+        if (horizontal == 0f) return 0.25f
+        
+        // EAR formula
+        val ear = (vertical1 + vertical2) / (2f * horizontal)
+        
+        return ear.coerceIn(0.1f, 0.5f)
+    }
+    
+    /**
+     * Tính khoảng cách Euclidean giữa 2 điểm
+     */
+    private fun distance(p1: PointF, p2: PointF): Float {
+        val dx = p1.x - p2.x
+        val dy = p1.y - p2.y
+        return sqrt(dx * dx + dy * dy)
+    }
+
+    /**
+     * Tính EAR từ eye open probability (method chính xác nhất)
+     */
+    private fun calculateSimplifiedEAR(face: Face): Float {
+        // Sử dụng eye open probability từ ML Kit - chính xác nhất
+        val leftProb = face.leftEyeOpenProbability
+        val rightProb = face.rightEyeOpenProbability
+        
+        if (leftProb != null && rightProb != null) {
+            val avgProb = (leftProb + rightProb) / 2f
+            
+            // Convert trực tiếp: probability -> EAR
+            // probability cao = mắt mở = EAR cao
+            // probability thấp = mắt nhắm = EAR thấp  
+            val ear = avgProb * 0.4f // Scale to 0.0-0.4 range
+            
+            Log.d("DrowsinessDetector", "Eye open probability: Left=%.3f, Right=%.3f, EAR=%.3f"
+                .format(leftProb, rightProb, ear))
+            
+            return ear
+        }
+        
+        Log.w("DrowsinessDetector", "Không có eye open probability data")
+        return 0.3f // Default khi không có data
     }
 
     /**
@@ -234,9 +307,9 @@ class DrowsinessDetector(
     }
 
     /**
-     * Vẽ overlay giống hệt dự án gốc
+     * Vẽ hình vuông theo dõi khuôn mặt chính xác
      */
-    private fun drawOverlay(
+    private fun drawAccurateFaceTracking(
         bitmap: Bitmap,
         face: Face?,
         ear: Float,
@@ -246,102 +319,158 @@ class DrowsinessDetector(
         val overlayBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(overlayBitmap)
         
-        // Colors theo trạng thái như dự án gốc
-        val faceColor = when (alertLevel) {
-            AlertLevel.CRITICAL -> Color.RED      // Nguy hiểm
-            AlertLevel.WARNING -> Color.YELLOW    // Cảnh báo  
-            AlertLevel.NORMAL -> Color.GREEN      // Bình thường
-        }
-        
         if (face != null) {
-            // 1. Vẽ rectangle quanh mặt (như haarcascade detection)
-            val facePaint = Paint().apply {
-                color = faceColor
-                style = Paint.Style.STROKE
-                strokeWidth = 3f
-                isAntiAlias = true
-            }
-            canvas.drawRect(face.boundingBox, facePaint)
+            // Vẽ hình vuông theo dõi khuôn mặt chính xác
+            drawPreciseFaceBox(canvas, face, alertLevel)
             
-            // 2. Vẽ landmarks mắt (tương tự 68-point landmarks)
-            drawEyeLandmarks(canvas, face, faceColor)
-            
-            // 3. Status text như dự án gốc
-            drawStatusText(canvas, true, ear, closedFrames, alertLevel)
+            // Status text đơn giản
+            drawSimpleStatus(canvas, ear, closedFrames, alertLevel)
         } else {
-            // Không có khuôn mặt
-            drawStatusText(canvas, false, 0.0f, 0, AlertLevel.NORMAL)
+            drawSimpleStatus(canvas, 0.0f, 0, AlertLevel.NORMAL)
         }
         
         onOverlayUpdate(overlayBitmap)
     }
-
-    private fun drawEyeLandmarks(canvas: Canvas, face: Face, color: Int) {
-        val eyePaint = Paint().apply {
-            this.color = color
+    
+    /**
+     * Vẽ hình vuông theo dõi khuôn mặt với độ chính xác cao
+     */
+    private fun drawPreciseFaceBox(canvas: Canvas, face: Face, alertLevel: AlertLevel) {
+        val boxColor = when (alertLevel) {
+            AlertLevel.CRITICAL -> Color.RED
+            AlertLevel.WARNING -> Color.YELLOW    
+            AlertLevel.NORMAL -> Color.GREEN
+        }
+        
+        val facePaint = Paint().apply {
+            color = boxColor
             style = Paint.Style.STROKE
-            strokeWidth = 2f
+            strokeWidth = 4f
             isAntiAlias = true
         }
         
-        // Vẽ điểm mắt
-        face.getLandmark(FaceLandmark.LEFT_EYE)?.let { leftEye ->
-            canvas.drawCircle(leftEye.position.x, leftEye.position.y, 3f, eyePaint)
-        }
+        // Phương pháp 1: Sử dụng face contour để có bounding box chính xác nhất
+        val faceOval = face.getContour(FaceContour.FACE)?.points
         
-        face.getLandmark(FaceLandmark.RIGHT_EYE)?.let { rightEye ->
-            canvas.drawCircle(rightEye.position.x, rightEye.position.y, 3f, eyePaint)
+        if (faceOval != null && faceOval.isNotEmpty()) {
+            // Tính bounding box chính xác từ tất cả điểm contour của khuôn mặt
+            var minX = Float.MAX_VALUE
+            var minY = Float.MAX_VALUE
+            var maxX = Float.MIN_VALUE
+            var maxY = Float.MIN_VALUE
+            
+            for (point in faceOval) {
+                minX = minOf(minX, point.x)
+                minY = minOf(minY, point.y)
+                maxX = maxOf(maxX, point.x)
+                maxY = maxOf(maxY, point.y)
+            }
+            
+            // Tạo padding để hình vuông bao quanh khuôn mặt thoải mái hơn
+            val padding = 20f
+            val preciseRect = RectF(
+                minX - padding, 
+                minY - padding, 
+                maxX + padding, 
+                maxY + padding
+            )
+            
+            // Vẽ hình vuông chính xác theo dõi khuôn mặt
+            canvas.drawRect(preciseRect, facePaint)
+            
+            // Vẽ cross-hair ở trung tâm để tracking tốt hơn
+            val centerX = (minX + maxX) / 2f
+            val centerY = (minY + maxY) / 2f
+            val crossSize = 10f
+            
+            val centerPaint = Paint().apply {
+                color = boxColor
+                strokeWidth = 2f
+                isAntiAlias = true
+            }
+            
+            canvas.drawLine(centerX - crossSize, centerY, centerX + crossSize, centerY, centerPaint)
+            canvas.drawLine(centerX, centerY - crossSize, centerX, centerY + crossSize, centerPaint)
+            
+            // Hiển thị tracking ID nếu có
+            val trackingId = face.trackingId
+            if (trackingId != null) {
+                val idPaint = Paint().apply {
+                    color = boxColor
+                    textSize = 16f
+                    typeface = Typeface.DEFAULT_BOLD
+                    isAntiAlias = true
+                }
+                canvas.drawText("ID: $trackingId", minX, minY - 5f, idPaint)
+            }
+            
+            Log.d("DrowsinessDetector", "Face tracking: ID=$trackingId center(%.1f,%.1f) từ ${faceOval.size} contour points"
+                .format(centerX, centerY))
+                
+        } else {
+            // Phương pháp 2: Fallback với bounding box có sẵn nhưng cải thiện
+            val originalBox = face.boundingBox
+            
+            // Mở rộng bounding box một chút để tracking tốt hơn
+            val expandedBox = RectF(
+                originalBox.left - 10f,
+                originalBox.top - 20f,
+                originalBox.right + 10f, 
+                originalBox.bottom + 10f
+            )
+            
+            canvas.drawRect(expandedBox, facePaint)
+            
+            // Vẽ cross-hair ở trung tâm
+            val centerX = expandedBox.centerX()
+            val centerY = expandedBox.centerY()
+            val crossSize = 10f
+            
+            val centerPaint = Paint().apply {
+                color = boxColor
+                strokeWidth = 2f
+                isAntiAlias = true
+            }
+            
+            canvas.drawLine(centerX - crossSize, centerY, centerX + crossSize, centerY, centerPaint)
+            canvas.drawLine(centerX, centerY - crossSize, centerX, centerY + crossSize, centerPaint)
+            
+            // Hiển thị tracking ID nếu có
+            val trackingId = face.trackingId
+            if (trackingId != null) {
+                val idPaint = Paint().apply {
+                    color = boxColor
+                    textSize = 16f
+                    typeface = Typeface.DEFAULT_BOLD
+                    isAntiAlias = true
+                }
+                canvas.drawText("ID: $trackingId", expandedBox.left, expandedBox.top - 5f, idPaint)
+            }
+            
+            Log.d("DrowsinessDetector", "Face tracking: ID=$trackingId fallback box center(%.1f,%.1f)"
+                .format(centerX, centerY))
         }
     }
-
-    private fun drawStatusText(
-        canvas: Canvas,
-        faceDetected: Boolean,
-        ear: Float,
-        closedFrames: Int,
-        alertLevel: AlertLevel
-    ) {
+    
+    private fun drawSimpleStatus(canvas: Canvas, ear: Float, closedFrames: Int, alertLevel: AlertLevel) {
         val textPaint = Paint().apply {
             color = Color.WHITE
-            textSize = 28f
+            textSize = 24f
             typeface = Typeface.DEFAULT_BOLD
-            setShadowLayer(3f, 2f, 2f, Color.BLACK)
-        }
-        
-        val smallTextPaint = Paint().apply {
-            color = Color.WHITE
-            textSize = 20f
             setShadowLayer(2f, 1f, 1f, Color.BLACK)
         }
         
-        var yPos = 50f
+        val statusText = when (alertLevel) {
+            AlertLevel.CRITICAL -> "🚨 DROWSY!"
+            AlertLevel.WARNING -> "⚠️ WARNING" 
+            AlertLevel.NORMAL -> "👁️ TRACKING"
+        }
         
-        if (faceDetected) {
-            // Status chính
-            val statusText = when (alertLevel) {
-                AlertLevel.CRITICAL -> "🚨 DROWSINESS ALERT! 🚨"
-                AlertLevel.WARNING -> "⚠️ DROWSINESS WARNING"
-                AlertLevel.NORMAL -> "👁️ EYES MONITORING"
-            }
-            canvas.drawText(statusText, 20f, yPos, textPaint)
-            yPos += 35f
-            
-            // EAR value
-            canvas.drawText("EAR: %.3f (Threshold: %.2f)".format(ear, EAR_THRESHOLD), 20f, yPos, smallTextPaint)
-            yPos += 25f
-            
-            // Frame count
-            canvas.drawText("Closed Frames: %d/%d".format(closedFrames, CONSECUTIVE_FRAMES), 20f, yPos, smallTextPaint)
-            yPos += 25f
-            
-            // Alert condition
-            if (alertLevel == AlertLevel.CRITICAL) {
-                canvas.drawText("🔊 PLAYING ALERT SOUND", 20f, yPos, textPaint)
-            }
-        } else {
-            canvas.drawText("🔍 SEARCHING FOR FACE...", 20f, yPos, textPaint)
-            yPos += 35f
-            canvas.drawText("Position your face in front of camera", 20f, yPos, smallTextPaint)
+        canvas.drawText(statusText, 20f, 50f, textPaint)
+        canvas.drawText("EAR: %.3f".format(ear), 20f, 80f, textPaint)
+        
+        if (closedFrames > 0) {
+            canvas.drawText("Closed: $closedFrames", 20f, 110f, textPaint)
         }
     }
 

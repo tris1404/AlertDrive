@@ -191,7 +191,7 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_check"
-                    android:tint="@color/primary"
+                    app:tint="@color/primary"
                     android:layout_marginEnd="8dp" />
 
                 <TextView
@@ -402,7 +402,7 @@
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:src="@drawable/ic_play"
-                        android:tint="@color/text_on_primary" />
+                        app:tint="@color/text_on_primary" />
 
                     <TextView
                         android:id="@+id/btnToggle"
@@ -419,7 +419,44 @@
 
             </androidx.cardview.widget.CardView>
 
-            <!-- Quick Stats Row -->
+
+
+            <!-- Nút chọn âm thanh đặt ngay dưới nút Start Detection gốc -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/primary"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+                <LinearLayout
+                    android:id="@+id/btnSelectSound2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:padding="16dp">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@android:drawable/ic_btn_speak_now"
+                        app:tint="@color/text_on_primary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CHỌN ÂM THANH"
+                        android:textColor="@color/text_on_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginStart="12dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Quick Stats Row (giữ nguyên) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -450,5 +487,19 @@
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>
+
+
+    <!-- Nút chọn âm thanh -->
+    <Button
+        android:id="@+id/btnSelectSound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chọn âm thanh"
+        android:layout_margin="16dp"
+        android:backgroundTint="@color/primary"
+        android:textColor="@color/text_on_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
