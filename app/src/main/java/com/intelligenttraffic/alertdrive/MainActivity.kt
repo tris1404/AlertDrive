@@ -2,13 +2,18 @@ package com.intelligenttraffic.alertdrive
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.util.Size
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -20,6 +25,152 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
+    // Popup camera ở màn hình chính
+    private var backPressedTime: Long = 0
+
+    // Modern back press handling using OnBackPressedDispatcher
+    private val backPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            // Chỉ xử lý thoát app bình thường khi ấn back, không tạo popup
+            if (supportFragmentManager.backStackEntryCount > 0) {
+                // If there are fragments in back stack, pop them
+                supportFragmentManager.popBackStack()
+            } else {
+                // Handle double tap to exit
+                if (backPressedTime + 2000 > System.currentTimeMillis()) {
+                    // Exit app completely
+                    finish()
+                } else {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Nhấn back lần nữa để thoát ứng dụng",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    backPressedTime = System.currentTimeMillis()
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        Log.d("MainActivity", "=== onCreate started ===")
+
+        // Register modern back press callback
+        onBackPressedDispatcher.addCallback(this, backPressedCallback)
+
+        alertManager = AlertManager(this)
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        setupClickListeners()
+
+        // Thiết lập click cho nút chọn âm thanh
+        val btnSelectSound = findViewById<android.widget.LinearLayout>(R.id.btnSelectSound2)
+        btnSelectSound?.setOnClickListener {
+            showSoundPickerDialog()
+        }
+
+        // Test PreviewView availability
+        val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
+        Log.d("MainActivity", "PreviewView in onCreate: ${previewView != null}")
+
+        // Không auto-start camera khi mở app
+        Log.d("MainActivity", "App started - camera will start when user enables detection")
+
+        Log.d("MainActivity", "=== onCreate completed ===")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Khi app bị minimize (Home button hoặc recent apps), tạo popup
+        if (!isFinishing && isDetectionActive) {
+            Log.d("MainActivity", "App paused, starting popup service")
+            startPopupServiceIfNeeded()
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Khi app không còn visible, đảm bảo popup được tạo
+        if (!isFinishing && isDetectionActive) {
+            Log.d("MainActivity", "App stopped, ensuring popup service")
+            startPopupServiceIfNeeded()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Khi app được mở lại, tắt popup service
+        Log.d("MainActivity", "App resumed, stopping popup service")
+        stopPopupService()
+
+        // Re-enable back press callback when resuming
+        backPressedCallback.isEnabled = true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Remove callback to prevent memory leaks
+        backPressedCallback.remove()
+
+        stopCamera()
+        cameraExecutor.shutdown()
+        alertManager.release()
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
+    private fun startPopupServiceIfNeeded() {
+        // Chỉ tạo popup nếu detection đang active và có quyền overlay
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            !Settings.canDrawOverlays(this)) {
+            // Request overlay permission
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName"))
+            startActivityForResult(intent, OVERLAY_PERMISSION_REQ)
+        } else {
+            startPopupService()
+        }
+    }
+
+    private fun stopPopupService() {
+        try {
+            val serviceIntent = Intent(this, CameraPopupService::class.java)
+            stopService(serviceIntent)
+            Log.d("MainActivity", "Popup service stopped")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error stopping popup service", e)
+        }
+    }
+
+    private fun startPopupService() {
+        val serviceIntent = Intent(this, CameraPopupService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == OVERLAY_PERMISSION_REQ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                Settings.canDrawOverlays(this)) {
+                startPopupService()
+            }
+        }
+    }
+
+    companion object {
+        const val OVERLAY_PERMISSION_REQ = 1001
+    }
+
     // Hiển thị dialog chọn âm thanh từ res/raw
     private fun showSoundPickerDialog() {
         val rawRes = R.raw::class.java.fields
@@ -79,34 +230,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Camera permission is required for face detection", Toast.LENGTH_LONG).show()
             // Không finish app ngay, cho phép user thử lại
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        Log.d("MainActivity", "=== onCreate started ===")
-
-        alertManager = AlertManager(this)
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
-        setupClickListeners()
-
-        // Thiết lập click cho nút chọn âm thanh
-        val btnSelectSound = findViewById<android.widget.LinearLayout>(R.id.btnSelectSound2)
-        btnSelectSound?.setOnClickListener {
-            showSoundPickerDialog()
-        }
-
-        // Test PreviewView availability
-        val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
-        Log.d("MainActivity", "PreviewView in onCreate: ${previewView != null}")
-
-        // Không auto-start camera khi mở app
-        Log.d("MainActivity", "App started - camera will start when user enables detection")
-
-        Log.d("MainActivity", "=== onCreate completed ===")
     }
 
     private fun setupClickListeners() {
@@ -210,22 +333,22 @@ class MainActivity : AppCompatActivity() {
             overlayImageView?.setImageBitmap(null)
             overlayImageView?.visibility = android.view.View.GONE
 
-            Log.d("MainActivity", "🔄 Stopping camera...")
+            Log.d("MainActivity", "📴 Stopping camera...")
             stopCamera()
         }
 
         Toast.makeText(this,
-            if (isDetectionActive) "✅ Detection Started" else "⏹️ Detection Stopped",
+            if (isDetectionActive) "✅ Detection Started" else "ℹ️ Detection Stopped",
             Toast.LENGTH_SHORT
         ).show()
 
         if (isDetectionActive) {
-            Log.d("MainActivity", "🔄 Detection activated, starting camera...")
-            Toast.makeText(this, "🔄 Detection activated, starting camera...", Toast.LENGTH_SHORT).show()
+            Log.d("MainActivity", "📴 Detection activated, starting camera...")
+            Toast.makeText(this, "📴 Detection activated, starting camera...", Toast.LENGTH_SHORT).show()
             checkCameraPermission()
             Log.d("MainActivity", "Calling startCamera() from toggleDetection")
         } else {
-            Log.d("MainActivity", "🔄 Detection deactivated, camera stopped")
+            Log.d("MainActivity", "📴 Detection deactivated, camera stopped")
         }
     }
 
@@ -541,16 +664,7 @@ class MainActivity : AppCompatActivity() {
         progressBar?.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopCamera()
-        cameraExecutor.shutdown()
-        alertManager.release()
-    mediaPlayer?.release()
-    mediaPlayer = null
-    }
-
-    // Handle orientation changes - đơn giản hóa  
+    // Handle orientation changes - Đơn giản hóa
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         Log.d("MainActivity", "Orientation changed: ${newConfig.orientation}")
@@ -558,5 +672,13 @@ class MainActivity : AppCompatActivity() {
         // Không restart camera cho orientation change để tránh lỗi
         // Camera sẽ tự động adapt với orientation mới
         Log.d("MainActivity", "Orientation change handled without camera restart")
+    }
+
+    private fun checkOverlayPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Settings.canDrawOverlays(this)
+        } else {
+            true
+        }
     }
 }

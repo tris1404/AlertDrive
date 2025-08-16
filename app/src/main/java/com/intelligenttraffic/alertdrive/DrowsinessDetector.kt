@@ -516,4 +516,13 @@ class DrowsinessDetector(
             null
         }
     }
+
+    //popup camera
+    fun close() {
+        try {
+            detector.close()
+        } catch (e: Exception) {
+            Log.e("DrowsinessDetector", "Error closing detector", e)
+        }
+    }
 }
