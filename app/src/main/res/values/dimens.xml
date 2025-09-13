@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing dimensions -->
+    <dimen name="spacing_tiny">4dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">20dp</dimen>
+    <dimen name="spacing_xxlarge">24dp</dimen>
+
+    <!-- Text sizes -->
+    <dimen name="text_size_header">28sp</dimen>
+    <dimen name="text_size_title">18sp</dimen>
+    <dimen name="text_size_body">16sp</dimen>
+    <dimen name="text_size_caption">14sp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+
+    <!-- Card dimensions -->
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_elevation">8dp</dimen>
+    <dimen name="card_padding">16dp</dimen>
+
+    <!-- Button dimensions -->
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="button_padding">16dp</dimen>
+
+    <!-- Icon dimensions -->
+    <dimen name="icon_size_small">20dp</dimen>
+    <dimen name="icon_size_medium">24dp</dimen>
+    <dimen name="icon_size_large">32dp</dimen>
+
+    <!-- Layout margins -->
+    <dimen name="layout_margin_horizontal">16dp</dimen>
+    <dimen name="layout_margin_vertical">8dp</dimen>
+    <dimen name="layout_margin_top">12dp</dimen>
+    <dimen name="layout_margin_bottom">12dp</dimen>
+
+    <!-- Camera overlay -->
+    <dimen name="camera_overlay_margin">16dp</dimen>
+    <dimen name="camera_status_padding">12dp</dimen>
+
+    <!-- Progress bar -->
+    <dimen name="progress_bar_height">8dp</dimen>
+    <dimen name="progress_bar_margin">8dp</dimen>
+</resources>
