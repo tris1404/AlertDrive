@@ -117,6 +117,17 @@ class MainActivity : AppCompatActivity() {
 
         // Re-enable back press callback when resuming
         backPressedCallback.isEnabled = true
+
+        // Thêm delay để đảm bảo popup service đã cleanup camera hoàn toàn
+        if (isDetectionActive && !isCameraStarted) {
+            Log.d("MainActivity", "Detection was active, restarting camera after popup cleanup")
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (isDetectionActive && !isFinishing) {
+                    Log.d("MainActivity", "Delayed camera restart after popup cleanup")
+                    checkCameraPermission()
+                }
+            }, 1000) // Delay 1 giây để đảm bảo cleanup hoàn tất
+        }
     }
 
     override fun onDestroy() {
@@ -466,6 +477,17 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        // Đảm bảo camera provider từ popup service đã được cleanup
+        if (cameraProvider != null) {
+            try {
+                cameraProvider?.unbindAll()
+                cameraProvider = null
+                Log.d("MainActivity", "Cleaned up existing camera provider")
+            } catch (e: Exception) {
+                Log.w("MainActivity", "Error cleaning up existing camera provider", e)
+            }
+        }
+
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
         cameraProviderFuture.addListener({
@@ -475,7 +497,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("MainActivity", "Camera provider obtained")
 
-                // Unbind everything first
+                // Unbind everything first để đảm bảo clean state
                 cameraProvider?.unbindAll()
 
                 // Create simplest preview possible
@@ -523,6 +545,16 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("MainActivity", "❌ Camera provider exception: ${e.message}", e)
                 Toast.makeText(this@MainActivity, "❌ Camera provider error: ${e.message}", Toast.LENGTH_LONG).show()
+
+                // Retry sau 2 giây nếu thất bại do conflict
+                if (e.message?.contains("bind", ignoreCase = true) == true) {
+                    Log.d("MainActivity", "Retrying camera start due to binding conflict...")
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        if (isDetectionActive && !isFinishing) {
+                            startCameraInternal()
+                        }
+                    }, 2000)
+                }
             }
         }, ContextCompat.getMainExecutor(this))
     }
