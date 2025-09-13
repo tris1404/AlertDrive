@@ -16,6 +16,7 @@ class AlertManager(private val context: Context) {
     private var lastAlertTime = 0L
     private var alertCount = 0
     private var currentAlertLevel = AlertLevel.NORMAL
+    private var customAlertSoundResId: Int = R.raw.alert_sound
 
     companion object {
         // Tham số theo dự án mẫu - alert ngay lập tức khi phát hiện
@@ -32,6 +33,14 @@ class AlertManager(private val context: Context) {
             @Suppress("DEPRECATION")
             context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
+    }
+
+    /**
+     * Thiết lập âm thanh cảnh báo tùy chọn
+     */
+    fun setCustomAlertSound(soundResId: Int) {
+        customAlertSoundResId = soundResId
+        Log.d("AlertManager", "Custom alert sound set to resource ID: $soundResId")
     }
 
     fun handleAlert(alertLevel: AlertLevel) {
@@ -130,7 +139,7 @@ class AlertManager(private val context: Context) {
             
             // Tạo MediaPlayer với âm thanh cảnh báo từ file mp3
             Log.d("AlertManager", "Creating MediaPlayer for alert sound...")
-            mediaPlayer = MediaPlayer.create(context, R.raw.alert_sound)
+            mediaPlayer = MediaPlayer.create(context, customAlertSoundResId)
             
             if (mediaPlayer != null) {
                 mediaPlayer?.setVolume(1.0f, 1.0f) // Full volume như dự án gốc

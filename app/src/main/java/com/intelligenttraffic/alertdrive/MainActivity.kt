@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, backPressedCallback)
 
         alertManager = AlertManager(this)
+        // Thiết lập âm thanh cảnh báo mặc định
+        alertManager.setCustomAlertSound(selectedSoundResId)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         setupClickListeners()
@@ -73,6 +75,11 @@ class MainActivity : AppCompatActivity() {
         btnSelectSound?.setOnClickListener {
             showSoundPickerDialog()
         }
+
+        // Tìm và lưu trữ TextView của nút chọn âm thanh
+        val soundButtonLayout = findViewById<android.widget.LinearLayout>(R.id.btnSelectSound2)
+        soundButtonText = soundButtonLayout?.findViewById<android.widget.TextView>(android.R.id.text1) ?: soundButtonLayout?.getChildAt(1) as? android.widget.TextView
+        updateSoundButtonText()
 
         // Test PreviewView availability
         val previewView = findViewById<androidx.camera.view.PreviewView>(R.id.previewView)
@@ -177,10 +184,27 @@ class MainActivity : AppCompatActivity() {
         val soundNames = rawRes.map { it.name }.toTypedArray()
         val context = this
         android.app.AlertDialog.Builder(context)
-            .setTitle("Chọn âm thanh")
+            .setTitle("Chọn âm thanh cảnh báo")
             .setItems(soundNames) { _, which ->
-                val resId = rawRes[which].getInt(null)
+                val selectedField = rawRes[which]
+                val resId = selectedField.getInt(null)
+                val soundName = selectedField.name
+
+                // Lưu lại âm thanh được chọn
+                selectedSoundResId = resId
+                selectedSoundName = soundName
+
+                // Cập nhật AlertManager sử dụng âm thanh mới
+                alertManager.setCustomAlertSound(resId)
+
+                // Cập nhật UI
+                updateSoundButtonText()
+
+                // Phát thử âm thanh
                 playRawSound(resId)
+
+                // Hiển thị thông báo
+                Toast.makeText(this, "Đã chọn âm thanh: $soundName", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Đóng", null)
             .show()
@@ -209,6 +233,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private var mediaPlayer: android.media.MediaPlayer? = null
+
+    // Biến lưu trữ âm thanh cảnh báo được chọn
+    private var selectedSoundResId: Int = R.raw.alert_sound
+    private var selectedSoundName: String = "alert_sound"
+    private var soundButtonText: android.widget.TextView? = null
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
@@ -279,6 +308,13 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e("MainActivity", "❌ Error setting up click listener", e)
         }
+    }
+
+    /**
+     * Cập nhật text của nút chọn âm thanh
+     */
+    private fun updateSoundButtonText() {
+        soundButtonText?.text = "Âm thanh: $selectedSoundName"
     }
 
     /**
