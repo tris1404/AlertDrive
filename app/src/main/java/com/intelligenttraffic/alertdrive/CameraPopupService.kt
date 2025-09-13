@@ -35,7 +35,7 @@ class CameraPopupService : Service(), LifecycleOwner {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private var cameraProvider: ProcessCameraProvider? = null
     private var drowsinessDetector: DrowsinessDetector? = null
-    private lateinit var eyeStatusText: TextView
+    private var alertMediaPlayer: MediaPlayer? = null
 
     private val lifecycleRegistry by lazy { LifecycleRegistry(this) }
 
@@ -146,13 +146,14 @@ class CameraPopupService : Service(), LifecycleOwner {
                 false
             )
 
-            // Thiết lập layout params cho popup nhỏ hơn
+            // Thiết lập layout params cho popup với kích thước cố định
             val params = WindowManager.LayoutParams(
-                350, // Width nhỏ hơn
-                250, // Height nhỏ hơn
+                320, // Fixed width
+                240, // Fixed height
                 getWindowType(),
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.END
@@ -160,41 +161,44 @@ class CameraPopupService : Service(), LifecycleOwner {
                 y = 100
             }
 
-            // Setup views
+            // Setup views - chỉ cần PreviewView
             val previewView = popupView?.findViewById<PreviewView>(R.id.camera_preview)
-            eyeStatusText = popupView?.findViewById(R.id.eye_status) ?: return
 
-            // Button để mở lại app chính
-            popupView?.findViewById<Button>(R.id.close_button)?.apply {
-                text = "Mở App"
-                setOnClickListener {
-                    openMainApp()
+            // Thêm click listener để mở lại app khi nhấn vào popup
+            popupView?.setOnClickListener {
+                Log.d("CameraPopupService", "Popup clicked, opening main app")
+                openMainApp()
+            }
+
+            // Thêm touch listener để xử lý touch events
+            popupView?.setOnTouchListener { _, event ->
+                when (event.action) {
+                    android.view.MotionEvent.ACTION_OUTSIDE -> {
+                        // Nếu touch bên ngoài popup, không làm gì
+                        false
+                    }
+                    else -> {
+                        // Để OnClickListener xử lý
+                        false
+                    }
                 }
             }
 
-            // Thêm button đóng popup
-            popupView?.findViewById<Button>(R.id.minimize_button)?.setOnClickListener {
-                stopSelf()
-            }
-
-            // Initialize drowsiness detector
+            // Initialize drowsiness detector với callbacks đơn giản
             drowsinessDetector = DrowsinessDetector(this,
                 onStateChanged = { state ->
-                    Handler(Looper.getMainLooper()).post {
-                        eyeStatusText.text = if (state.isEyesClosed) "Mắt: Nhắm" else "Mắt: Mở"
-                        if (state.alertLevel == AlertLevel.CRITICAL) {
-                            playAlertSound()
-                            // Make popup more visible when alert
-                            makePopupVisible()
-                        }
+                    // Phát âm thanh cảnh báo khi phát hiện ngủ gật
+                    if (state.alertLevel == AlertLevel.CRITICAL) {
+                        playAlertSound()
                     }
+                    Log.d("CameraPopupService", "Drowsiness state: ${state.alertLevel}, EAR: ${state.eyeAspectRatio}")
                 },
-                onOverlayUpdate = { /* Không cần overlay cho popup */ },
+                onOverlayUpdate = { /* Không cần overlay */ },
                 onFrameUpdate = { /* Không cần xử lý frame */ }
             )
 
             windowManager.addView(popupView, params)
-            Log.d("CameraPopupService", "Popup window added successfully")
+            Log.d("CameraPopupService", "Popup window added successfully with fixed size: 320x240")
 
             // Start camera after popup is set up
             if (previewView != null) {
@@ -206,19 +210,6 @@ class CameraPopupService : Service(), LifecycleOwner {
         } catch (e: Exception) {
             Log.e("CameraPopupService", "Error setting up popup window", e)
             stopSelf()
-        }
-    }
-
-    private fun makePopupVisible() {
-        try {
-            popupView?.let { view ->
-                val params = view.layoutParams as WindowManager.LayoutParams
-                // Bring to front and make more visible
-                params.flags = params.flags or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
-                windowManager.updateViewLayout(view, params)
-            }
-        } catch (e: Exception) {
-            Log.e("CameraPopupService", "Error making popup visible", e)
         }
     }
 
@@ -239,45 +230,59 @@ class CameraPopupService : Service(), LifecycleOwner {
     }
 
     private fun startCamera(previewView: PreviewView) {
-        cameraProviderFuture.addListener({
-            try {
-                cameraProvider = cameraProviderFuture.get()
-                cameraProvider?.unbindAll()
+        Log.d("CameraPopupService", "Starting camera in popup...")
 
-                val preview = Preview.Builder()
-                    .setTargetResolution(android.util.Size(320, 240)) // Lower resolution for popup
-                    .build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
+        // Ensure PreviewView is properly initialized
+        previewView.post {
+            cameraProviderFuture.addListener({
+                try {
+                    cameraProvider = cameraProviderFuture.get()
+                    cameraProvider?.unbindAll()
 
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setTargetResolution(android.util.Size(320, 240))
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                    .also {
-                        drowsinessDetector?.let { detector ->
-                            it.setAnalyzer(cameraExecutor, detector)
+                    // Create preview with optimized settings for popup
+                    val preview = Preview.Builder()
+                        .setTargetResolution(android.util.Size(640, 480)) // Higher resolution for better detection
+                        .build().also {
+                            it.setSurfaceProvider(previewView.surfaceProvider)
                         }
+
+                    // Create image analysis for drowsiness detection
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setTargetResolution(android.util.Size(640, 480))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+                        .also {
+                            drowsinessDetector?.let { detector ->
+                                it.setAnalyzer(cameraExecutor, detector)
+                            }
+                        }
+
+                    // Try front camera first
+                    try {
+                        val camera = cameraProvider?.bindToLifecycle(
+                            this,
+                            CameraSelector.DEFAULT_FRONT_CAMERA,
+                            preview,
+                            imageAnalysis
+                        )
+
+                        if (camera != null) {
+                            Log.d("CameraPopupService", "Front camera started successfully in popup")
+                        } else {
+                            Log.w("CameraPopupService", "Front camera binding returned null, trying back camera")
+                            tryBackCamera(previewView)
+                        }
+                    } catch (e: Exception) {
+                        Log.w("CameraPopupService", "Front camera failed, trying back camera", e)
+                        tryBackCamera(previewView)
                     }
 
-                val camera = cameraProvider?.bindToLifecycle(
-                    this,
-                    CameraSelector.DEFAULT_FRONT_CAMERA,
-                    preview,
-                    imageAnalysis
-                )
-
-                if (camera != null) {
-                    Log.d("CameraPopupService", "Camera started successfully in popup")
-                } else {
-                    Log.e("CameraPopupService", "Failed to bind camera")
+                } catch (e: Exception) {
+                    Log.e("CameraPopupService", "Error starting camera in popup", e)
+                    // Không có UI để hiển thị lỗi
                 }
-            } catch (e: Exception) {
-                Log.e("CameraPopupService", "Use case binding failed", e)
-                // Try with back camera as fallback
-                tryBackCamera(previewView)
-            }
-        }, ContextCompat.getMainExecutor(this))
+            }, ContextCompat.getMainExecutor(this))
+        }
     }
 
     private fun tryBackCamera(previewView: PreviewView) {
@@ -285,13 +290,13 @@ class CameraPopupService : Service(), LifecycleOwner {
             cameraProvider?.unbindAll()
 
             val preview = Preview.Builder()
-                .setTargetResolution(android.util.Size(320, 240))
+                .setTargetResolution(android.util.Size(640, 480))
                 .build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
             val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(android.util.Size(320, 240))
+                .setTargetResolution(android.util.Size(640, 480))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
                 .also {
@@ -300,40 +305,75 @@ class CameraPopupService : Service(), LifecycleOwner {
                     }
                 }
 
-            cameraProvider?.bindToLifecycle(
+            val camera = cameraProvider?.bindToLifecycle(
                 this,
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview,
                 imageAnalysis
             )
-            Log.d("CameraPopupService", "Back camera started as fallback")
+
+            if (camera != null) {
+                Log.d("CameraPopupService", "Back camera started successfully in popup")
+            } else {
+                Log.e("CameraPopupService", "Failed to bind back camera")
+                // Không có UI để hiển thị lỗi
+            }
         } catch (e: Exception) {
-            Log.e("CameraPopupService", "Back camera also failed", e)
+            Log.e("CameraPopupService", "Back camera binding failed", e)
+            // Không có UI để hiển thị lỗi
         }
     }
 
     private fun playAlertSound() {
         try {
-            // Use system sound as fallback
-            val mediaPlayer = MediaPlayer()
-            val afd = assets.openFd("alert_sound.wav") // If you have this file
-            mediaPlayer.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
-            mediaPlayer.prepare()
-            mediaPlayer.start()
-            mediaPlayer.setOnCompletionListener {
-                it.release()
-                afd.close()
+            // Stop any existing alert sound
+            alertMediaPlayer?.apply {
+                if (isPlaying) {
+                    stop()
+                }
+                release()
+            }
+
+            // Create new MediaPlayer with alert sound from resources
+            alertMediaPlayer = MediaPlayer.create(this, R.raw.alert_sound)?.apply {
+                setVolume(1.0f, 1.0f) // Full volume
+                isLooping = false // Don't loop in popup
+                setOnCompletionListener {
+                    it.release()
+                    alertMediaPlayer = null
+                }
+                start()
+            }
+
+            if (alertMediaPlayer == null) {
+                Log.w("CameraPopupService", "Could not create MediaPlayer for alert sound")
+                // Fallback to vibration
+                vibrateForAlert()
+            } else {
+                Log.d("CameraPopupService", "Alert sound started in popup")
             }
         } catch (e: Exception) {
-            Log.e("CameraPopupService", "Error playing alert sound, using vibration instead", e)
+            Log.e("CameraPopupService", "Error playing alert sound", e)
             // Fallback to vibration
+            vibrateForAlert()
+        }
+    }
+
+    private fun vibrateForAlert() {
+        try {
             val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(android.os.VibrationEffect.createOneShot(1000, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                val pattern = longArrayOf(0, 500, 200, 500, 200, 500)
+                val amplitudes = intArrayOf(0, 255, 0, 255, 0, 255)
+                vibrator.vibrate(android.os.VibrationEffect.createWaveform(pattern, amplitudes, -1))
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(1000)
+                val pattern = longArrayOf(0, 500, 200, 500, 200, 500)
+                vibrator.vibrate(pattern, -1)
             }
+            Log.d("CameraPopupService", "Vibration alert used as fallback")
+        } catch (e: Exception) {
+            Log.e("CameraPopupService", "Error with vibration", e)
         }
     }
 
@@ -344,10 +384,41 @@ class CameraPopupService : Service(), LifecycleOwner {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
 
         try {
-            drowsinessDetector?.close()
+            // Stop and release alert sound
+            alertMediaPlayer?.apply {
+                if (isPlaying) {
+                    stop()
+                }
+                release()
+            }
+            alertMediaPlayer = null
+
+            // Cleanup camera and detector - đảm bảo cleanup đúng thứ tự
+            Log.d("CameraPopupService", "Cleaning up camera resources...")
+
+            // Unbind camera trước
             cameraProvider?.unbindAll()
+            cameraProvider = null
+
+            // Shutdown executor
             cameraExecutor.shutdown()
+            try {
+                if (!cameraExecutor.awaitTermination(1000, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                    cameraExecutor.shutdownNow()
+                }
+            } catch (e: InterruptedException) {
+                cameraExecutor.shutdownNow()
+            }
+
+            // Cleanup detector
+            drowsinessDetector?.close()
+            drowsinessDetector = null
+
+            // Remove popup view
             popupView?.let { windowManager.removeView(it) }
+            popupView = null
+
+            Log.d("CameraPopupService", "CameraPopupService destroyed successfully")
         } catch (e: Exception) {
             Log.e("CameraPopupService", "Error in onDestroy", e)
         }
