@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Large screen dimensions - extra spacing for tablets -->
+    <dimen name="text_size_header">40sp</dimen>
+    <dimen name="text_size_title">22sp</dimen>
+    <dimen name="text_size_body">20sp</dimen>
+    <dimen name="text_size_caption">18sp</dimen>
+    <dimen name="text_size_small">16sp</dimen>
+
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="spacing_xlarge">36dp</dimen>
+    <dimen name="spacing_xxlarge">40dp</dimen>
+
+    <dimen name="card_padding">24dp</dimen>
+    <dimen name="layout_margin_horizontal">32dp</dimen>
+    <dimen name="layout_margin_vertical">16dp</dimen>
+</resources>

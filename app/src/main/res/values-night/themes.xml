@@ -1,0 +1,20 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.AlertDrive" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/green_light</item>
+        <item name="colorSecondaryVariant">@color/green_medium</item>
+        <item name="colorOnSecondary">@color/text_on_primary</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/green_dark</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Make it full screen -->
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>

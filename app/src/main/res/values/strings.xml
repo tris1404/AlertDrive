@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AlertDrive</string>
+    <string name="camera_icon_desc">Biểu tượng camera</string>
+    <string name="popup_title">AlertDrive - Theo dõi tài xế</string>
+    <string name="open_app">MỞ APP</string>
+    <string name="close_symbol">×</string>
+    <string name="eye_status_default">👁️ MẮT: ĐANG MỞ</string>
+    <string name="driver_status_monitoring">Đang theo dõi trạng thái tài xế</string>
+</resources>

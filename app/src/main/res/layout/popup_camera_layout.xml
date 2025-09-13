@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/popup_card"
+    android:layout_width="320dp"
+    android:layout_height="280dp"
+    android:elevation="16dp"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/card_background">
+
+        <!-- Header với logo ứng dụng -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/gradient_header_modern"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_camera"
+                app:tint="@color/text_on_primary"
+                android:contentDescription="@string/camera_icon_desc" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/popup_title"
+                android:textColor="@color/text_on_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium"
+                android:layout_marginStart="8dp" />
+
+            <Button
+                android:id="@+id/close_button"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:background="@drawable/btn_primary"
+                android:text="@string/open_app"
+                android:textSize="12sp"
+                android:textColor="@color/text_on_primary"
+                android:textAllCaps="false"
+                android:layout_marginEnd="4dp"
+                android:paddingHorizontal="8dp" />
+
+            <Button
+                android:id="@+id/minimize_button"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/btn_red"
+                android:text="@string/close_symbol"
+                android:textSize="16sp"
+                android:textColor="@color/text_on_primary"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Khu vực hiển thị camera -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="8dp"
+            android:background="@color/surface_light">
+
+            <androidx.camera.view.PreviewView
+                android:id="@+id/camera_preview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <!-- Thông báo trạng thái -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/glass_background"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <TextView
+                    android:id="@+id/eye_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/eye_status_default"
+                    android:textColor="@color/primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp" />
+            </androidx.cardview.widget.CardView>
+        </FrameLayout>
+
+        <!-- Thanh trạng thái -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/surface_dark"
+            android:padding="8dp"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/status_indicator"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/bg_circle"
+                android:backgroundTint="@color/status_green"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/status_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/driver_status_monitoring"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif-medium" />
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="80dp"
+                android:layout_height="6dp"
+                android:progress="0"
+                android:max="100"
+                android:progressDrawable="@drawable/bg_progress_gradient"
+                android:progressBackgroundTint="@color/green_lightest" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
