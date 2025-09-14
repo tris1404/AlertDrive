@@ -730,6 +730,18 @@ class MainActivity : AppCompatActivity() {
             else -> ContextCompat.getColor(this, android.R.color.holo_green_light)
         }
         progressBar?.progressTintList = android.content.res.ColorStateList.valueOf(progressColor)
+
+        // Update risk percent text
+        val tvRiskPercent = findViewById<android.widget.TextView>(R.id.tvRiskPercent)
+        tvRiskPercent?.text = "$progress%"
+
+        // Update risk percent color theo mức độ nguy hiểm
+        val riskColor = when {
+            progress >= 100 -> ContextCompat.getColor(this, android.R.color.holo_red_light)
+            progress >= 60 -> ContextCompat.getColor(this, android.R.color.holo_orange_light)
+            else -> ContextCompat.getColor(this, android.R.color.holo_green_light)
+        }
+        tvRiskPercent?.setTextColor(riskColor)
     }
 
     // Handle orientation changes - Đơn giản hóa
